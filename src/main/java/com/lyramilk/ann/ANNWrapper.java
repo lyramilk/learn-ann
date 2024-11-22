@@ -1,21 +1,22 @@
 package com.lyramilk.ann;
 
-import com.alibaba.fastjson2.JSON;
+import com.google.gson.Gson;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class ANNWrapper implements java.io.Serializable {
-    private ANN ann;
+    private final ANN ann = new ANN();
     private List<Integer> layers = new ArrayList<>();
     private final Map<String, Integer> inputMapping = new HashMap<>();
     private final Map<String, Integer> outputMapping = new HashMap<>();
     private int tokenCount = -1;
 
     public ANNWrapper() {
-        ann = new ANN();
+
     }
 
 
@@ -23,11 +24,35 @@ public class ANNWrapper implements java.io.Serializable {
         layers.add(neuronCount);
     }
 
-    public static ANNWrapper load(String json) {
-        return JSON.parseObject(json, ANNWrapper.class);
+    public static ANNWrapper loadJSON(String json) {
+        Gson gson = new Gson();
+        return gson.fromJson(json, ANNWrapper.class);
     }
 
-    public String train(List<Data> dataList, double rate) {
+    public String toJSON() {
+        Gson gson = new Gson();
+        return gson.toJson(this);
+    }
+
+    public static ANNWrapper loadBin(byte[] bytes) {
+        try {
+            return (ANNWrapper) new ObjectInputStream(new ByteArrayInputStream(bytes)).readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
+    public byte[] toBin() throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(baos);
+        oos.writeObject(this);
+        oos.close();
+        return baos.toByteArray();
+    }
+
+    public void train(List<Data> dataList, double rate) {
         for (Data data : dataList) {
             for (Map.Entry<String, Double> entry : data.inputs.entrySet()) {
                 String word = entry.getKey();
@@ -80,11 +105,9 @@ public class ANNWrapper implements java.io.Serializable {
         for (Item item : trainData) {
             ann.train(item, rate);
         }
-
-        return JSON.toJSONString(this);
     }
 
-    public String train(List<Data> dataList, int tokenCount, double rate) {
+    public void train(List<Data> dataList, int tokenCount, double rate) {
         if (tokenCount <= 0) {
             throw new IllegalArgumentException("tokenCount must be greater than 0");
         }
@@ -128,6 +151,7 @@ public class ANNWrapper implements java.io.Serializable {
 
         // 设置参数数目如果tokenCount大于0，表示使用tokenCount作为输入参数数目
         ann.setInputCount(tokenCount);
+        this.tokenCount = tokenCount;
 
         // 添加隐藏层
         for (int neuronCount : layers) {
@@ -135,12 +159,16 @@ public class ANNWrapper implements java.io.Serializable {
         }
         // 添加输出层
         ann.addLayer(outputMapping.size());
+System.out.println("即将提交训练共有" + inputMapping.size() + "个参数和" + outputMapping.size() + "个输出");
+for(int i=0;i<ann.layers.size();++i){
+    System.out.println("第" + i + "层神经元数量" + ann.layers.get(i).neurons.length);
+}
 
-        for (Item item : trainData) {
-            ann.train(item, rate);
+
+        for(int i=0;i<trainData.size();++i){
+            System.out.println("第" + i + "次训练");
+            ann.train(trainData.get(i), rate);
         }
-
-        return JSON.toJSONString(this);
     }
 
     public Map<String, Double> calc(Map<String, Double> inputs) {

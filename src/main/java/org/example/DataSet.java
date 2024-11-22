@@ -1,6 +1,7 @@
 package org.example;
 
-import com.alibaba.fastjson2.JSON;
+
+import com.google.gson.Gson;
 import com.huaban.analysis.jieba.JiebaSegmenter;
 import com.lyramilk.ann.Data;
 
@@ -10,7 +11,9 @@ public class DataSet {
     private List<InputData> data = new ArrayList<>();
 
     static DataSet fromJson(String json) {
-        List<Map> parseArray = JSON.parseArray(json, Map.class);
+        Gson gson = new Gson();
+        //List<Map> parseArray = JSON.parseArray(json, Map.class);
+        List<Map> parseArray = (List<Map>)gson.fromJson(json, List.class);
 
         JiebaSegmenter segmenter = new JiebaSegmenter();
 
@@ -20,8 +23,10 @@ public class DataSet {
             String input = (String) map.get("input");
             String output = (String) map.get("output");
 
+            String[] outputs = output.split(" ");
+
             inputData.input = segmenter.sentenceProcess(input);
-            inputData.output = Arrays.stream(output.split(" ")).toList();
+            inputData.output = Arrays.asList(outputs);
             dataSet.data.add(inputData);
         }
 
@@ -30,12 +35,15 @@ public class DataSet {
 
     public List<Data> toData() {
         List<Data> dataList = new ArrayList<>();
+        int datacount = 0;
         for (InputData inputData : data) {
+            if(datacount++ > 0) break;
             Data data = new Data();
             data.inputs = new HashMap<>();
             data.outputs = new HashMap<>();
             for (String word : inputData.input) {
-                data.inputs.put(word, 1.0);
+                data.inputs.put(word, 30.0);
+                break;
             }
             for (String word : inputData.output) {
                 String[] split = word.split("(?<=\\D)(?=\\d)");
@@ -46,8 +54,10 @@ public class DataSet {
                     outputValue = outputValue.replaceAll("[^\\d.]", "");
                     double value = Double.parseDouble(outputValue);
                     data.outputs.put(output, value);
+                    break;
                 }
             }
+            dataList.add(data);
             dataList.add(data);
         }
         return dataList;
