@@ -8,14 +8,12 @@ import com.lyramilk.ann.Data;
 import java.util.*;
 
 public class DataSet {
-    private List<InputData> data = new ArrayList<>();
+    private final List<InputData> data = new ArrayList<>();
+    private static final JiebaSegmenter segmenter = new JiebaSegmenter();
 
     static DataSet fromJson(String json) {
         Gson gson = new Gson();
-        //List<Map> parseArray = JSON.parseArray(json, Map.class);
         List<Map> parseArray = (List<Map>)gson.fromJson(json, List.class);
-
-        JiebaSegmenter segmenter = new JiebaSegmenter();
 
         DataSet dataSet = new DataSet();
         for (Map map : parseArray) {
@@ -33,17 +31,20 @@ public class DataSet {
         return dataSet;
     }
 
+    public static List<String> segment(String text) {
+        return segmenter.sentenceProcess(text);
+    }
+
     public List<Data> toData() {
+        int inputCount = 0;
         List<Data> dataList = new ArrayList<>();
-        int datacount = 0;
         for (InputData inputData : data) {
-            if(datacount++ > 0) break;
+            if(++inputCount > 2)  break;
             Data data = new Data();
             data.inputs = new HashMap<>();
-            data.outputs = new HashMap<>();
+            data.predictions = new HashMap<>();
             for (String word : inputData.input) {
-                data.inputs.put(word, 30.0);
-                break;
+                data.inputs.put(word, 1.0);
             }
             for (String word : inputData.output) {
                 String[] split = word.split("(?<=\\D)(?=\\d)");
@@ -53,11 +54,9 @@ public class DataSet {
                     // 把outputValue转成double，注意如果包含非数字字符，直接停止转换
                     outputValue = outputValue.replaceAll("[^\\d.]", "");
                     double value = Double.parseDouble(outputValue);
-                    data.outputs.put(output, value);
-                    break;
+                    data.predictions.put(output, value);
                 }
             }
-            dataList.add(data);
             dataList.add(data);
         }
         return dataList;
