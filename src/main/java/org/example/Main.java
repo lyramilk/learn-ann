@@ -39,7 +39,7 @@ public class Main {
 
     ANNWrapper ann = new ANNWrapper();
 
-    public void trainPrescription(int samplesCount,int epoch)
+    public void trainPrescription(int samplesCount,int epoch,double rate)
     {
         System.out.println("正在训练模型...");
 
@@ -60,7 +60,7 @@ public class Main {
         }
 
 
-        ann.train(dataList, 0.01,epoch);
+        ann.train(dataList, rate,epoch);
         System.out.println("模型训练完成");
     }
 
@@ -141,7 +141,7 @@ public class Main {
         Main main = new Main();
 
         main.loadDataSet();
-        main.trainPrescription(100,10000000);
+        main.trainPrescription(100,10000,0.001);
 
         main.saveModel("E:\\model.json");
         //main.loadModel("E:\\model.json");
