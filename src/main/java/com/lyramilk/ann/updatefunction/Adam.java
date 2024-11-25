@@ -19,7 +19,7 @@ public class Adam implements IUpdateWeightFunction {
             double dold = neuron.momentum[i];
             double gradientData = gradient.data[i];
             neuron.momentum[i] = BETA_1 * neuron.momentum[i] + (1 - BETA_1) * gradient.data[i];
-            System.out.println("节点" + neuron.id + "的第" + i + "个权重的动量：" + dold + " -> " + neuron.momentum[i]+ "梯度：" + gradientData);
+            //System.out.println("节点" + neuron.id + "的第" + i + "个权重的动量：" + dold + " -> " + neuron.momentum[i]+ "梯度：" + gradientData);
             neuron.velocity[i] = BETA_2 * neuron.velocity[i] + (1 - BETA_2) * gradient.data[i] * gradient.data[i];
             double mHat = neuron.momentum[i] / (1 - Math.pow(BETA_1, t));
             double vHat = neuron.velocity[i] / (1 - Math.pow(BETA_2, t));
@@ -28,7 +28,7 @@ public class Adam implements IUpdateWeightFunction {
         //计算偏置权重
         double dold = neuron.biasMomentum;
         neuron.biasMomentum = BETA_1 * neuron.biasMomentum + (1 - BETA_1) * gradient.data[neuron.weights.length];
-        System.out.println("节点" + neuron.id + "的偏置权重的动量：" + dold + " -> " + neuron.biasMomentum + "梯度：" + neuron.weights.length);
+        //System.out.println("节点" + neuron.id + "的偏置权重的动量：" + dold + " -> " + neuron.biasMomentum + "梯度：" + neuron.weights.length);
         neuron.biasVelocity = BETA_2 * neuron.biasVelocity + (1 - BETA_2) * gradient.data[neuron.weights.length] * gradient.data[neuron.weights.length];
         double mHat = neuron.biasMomentum / (1 - Math.pow(BETA_1, t));
         double vHat = neuron.biasVelocity / (1 - Math.pow(BETA_2, t));

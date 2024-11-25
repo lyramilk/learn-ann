@@ -71,6 +71,18 @@ public class BP extends ANN<UpdatableLayer> {
                 Neuron neuron = layer.neurons[j];
                 updateWeightFunction.updateWeight(layer,neuron, gradient[j], rate,curEpochs);
             }
+
+            Vector nextErrors = new Vector(prevLayer.neurons.length);
+            for (int j = 0; j < prevLayer.neurons.length; j++) {
+                Neuron neuron = prevLayer.neurons[j];
+                double sum = 0;
+                for (int k = 0; k < layer.neurons.length; k++) {
+                    Neuron nextNeuron = layer.neurons[k];
+                    sum += nextNeuron.weights[j] * errors.data[k];
+                }
+                nextErrors.data[j] = sum;
+            }
+            errors = nextErrors;
         }
 
         // 更新第一层
@@ -89,6 +101,7 @@ public class BP extends ANN<UpdatableLayer> {
         for (int j = 0; j < layer.neurons.length; j++) {
             Neuron neuron = layer.neurons[j];
             for (int k = 0; k < neuron.weights.length; k++) {
+                //System.out.println(neuron.id  +  "神经元" + j  + "/" + layer.neurons.length + "权重" + k + "错误数" + errors.size());
                 double e = errors.data[j];
                 double o = currentOutputs.data[j];
                 double g = e * o;

@@ -2,6 +2,7 @@ package org.example;
 
 import com.lyramilk.ann.ILossFunction;
 import com.lyramilk.ann.Item;
+import com.lyramilk.ann.activationfunction.Identify;
 import com.lyramilk.ann.activationfunction.Relu;
 import com.lyramilk.ann.bp.ANNWrapper;
 import com.lyramilk.ann.bp.BP;
@@ -58,22 +59,23 @@ public class Main {
         ann.addLayer(2, Relu.Instance);
 
 
+        for(int t = 0;t<1000;++t) {
+            for (double i = 10; i < 300; i += 1) {
+                for (double j = 30; j < 40; j += 1) {
+                    double[] input = {i, j};
+                    double[] output = {i * j, i + j};
 
-        for(double i = 10;i<300;i+=1){
-            for(double j = 30;j<40;j+=1){
-                double[] input = {i,j};
-                double[] output = {i*j,i+j};
-
-                Item item = new Item();
-                item.inputs = input;
-                item.predictions = output;
-                double loss = ann.train(item,0.001, MSE.Instance);
-                System.out.println("第" + i + "次训练，loss=" + loss);
+                    Item item = new Item();
+                    item.inputs = input;
+                    item.predictions = output;
+                    double loss = ann.train(item, 0.00001, MSE.Instance);
+                    //System.out.println(t + "第" + i + "次训练，loss=" + loss);
+                }
             }
         }
 
 
-        double[] input = {201,30};
+        double[] input = {2001,30};
         double[] result = ann.calc(input);
         System.out.println("预测结果：" + result[0] + "," + result[1]);
         /**/
