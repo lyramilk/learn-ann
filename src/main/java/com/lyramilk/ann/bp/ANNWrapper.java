@@ -2,8 +2,7 @@ package com.lyramilk.ann.bp;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.lyramilk.ann.Data;
-import com.lyramilk.ann.Item;
+import com.lyramilk.ann.*;
 import com.lyramilk.ann.lossfunction.MSE;
 import com.lyramilk.ann.updatefunction.Adam;
 
@@ -14,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 public class ANNWrapper implements java.io.Serializable {
-    private final BP bp = new BP(new Adam());
+    private final BP bp = new BP();
     private final List<Integer> layers = new ArrayList<>();
     private final Map<String, Integer> inputMapping = new HashMap<>();
     private final Map<String, Integer> outputMapping = new HashMap<>();
@@ -25,7 +24,7 @@ public class ANNWrapper implements java.io.Serializable {
     }
 
     public static ANNWrapper loadJSON(String json) {
-        Gson gson = new Gson();
+        Gson gson = new GsonBuilder().create();
         return gson.fromJson(json, ANNWrapper.class);
     }
 
@@ -55,14 +54,12 @@ public class ANNWrapper implements java.io.Serializable {
         return baos.toByteArray();
     }
 
-    public void train(List<Data> dataList, double rate) {
+    public void train(List<Data> dataList, double rate,int epoch) {
         for (Data data : dataList) {
             for (Map.Entry<String, Double> entry : data.inputs.entrySet()) {
                 String word = entry.getKey();
                 if (!inputMapping.containsKey(word)) {
-
                     inputMapping.put(word, inputMapping.size());
-
                 }
             }
 
@@ -95,31 +92,26 @@ public class ANNWrapper implements java.io.Serializable {
             trainData.add(item);
         }
 
-        // 设置参数数目
-        bp.setInputCount(inputMapping.size());
-
         // 添加隐藏层
         for (int neuronCount : layers) {
-            bp.addLayer(neuronCount, com.lyramilk.ann.activationfunction.Relu.Instance);
+            bp.addLayer(neuronCount, IActivationFunction.RELU);
         }
         // 添加输出层
-        bp.addLayer(outputMapping.size(), com.lyramilk.ann.activationfunction.Identify.Instance);
+        bp.addLayer(outputMapping.size(), IActivationFunction.RELU);
+        bp.init(inputMapping.size());
 
 
         System.out.println("即将提交训练共有" + inputMapping.size() + "个参数和" + outputMapping.size() + "个输出");
-        for (int i = 0; i < bp.layers.size(); ++i) {
-            System.out.println("第" + i + "层神经元数量" + bp.layers.get(i).neurons.length);
-        }
 
-
-        for (int i = 0; i < trainData.size(); ++i) {
-            double loss = bp.train(trainData.get(i), rate, MSE.Instance);
-            System.out.println("第" + i + "次训练，loss=" + loss);
-        }
-        for(int q=0;q<1;++q) {
+        for(int q=0;q<epoch;++q) {
             for (int i = 0; i < trainData.size(); ++i) {
-                double loss = bp.train(trainData.get(i), rate, MSE.Instance);
+                double loss = bp.train(trainData.get(i), rate, IUpdateWeightFunction.ADAM, ILossFunction.MSE);
                 System.out.println("第" + q + "轮，第" + i + "次训练，loss=" + loss);
+                if(loss < 0.001){
+                    System.out.println("loos小于0.001，停止训练");
+                    return;
+                }
+
             }
         }
     }
@@ -167,15 +159,16 @@ public class ANNWrapper implements java.io.Serializable {
         }
 
         // 设置参数数目如果tokenCount大于0，表示使用tokenCount作为输入参数数目
-        bp.setInputCount(tokenCount);
         this.tokenCount = tokenCount;
 
         // 添加隐藏层
         for (int neuronCount : layers) {
-            bp.addLayer(neuronCount, com.lyramilk.ann.activationfunction.Relu.Instance);
+            bp.addLayer(neuronCount, IActivationFunction.RELU);
         }
         // 添加输出层
-        bp.addLayer(outputMapping.size(), com.lyramilk.ann.activationfunction.Identify.Instance);
+        bp.addLayer(outputMapping.size(),IActivationFunction.IDENTIFY);
+        bp.init(inputMapping.size() % tokenCount);
+
         System.out.println("即将提交训练共有" + inputMapping.size() + "个参数和" + outputMapping.size() + "个输出");
         for (int i = 0; i < bp.layers.size(); ++i) {
             System.out.println("第" + i + "层神经元数量" + bp.layers.get(i).neurons.length);
@@ -183,7 +176,7 @@ public class ANNWrapper implements java.io.Serializable {
 
 
         for (int i = 0; i < trainData.size(); ++i) {
-            double loss = bp.train(trainData.get(i), rate, MSE.Instance);
+            double loss = bp.train(trainData.get(i), rate, IUpdateWeightFunction.ADAM, ILossFunction.MSE);
             System.out.println("第" + i + "次训练，loss=" + loss);
         }
     }
@@ -195,9 +188,11 @@ public class ANNWrapper implements java.io.Serializable {
         } else {
             input = new double[inputMapping.size()];
         }
+        List<String> matchedWords = new ArrayList<>();
         for (Map.Entry<String, Double> entry : inputs.entrySet()) {
             String word = entry.getKey();
             double value = entry.getValue();
+            matchedWords.add(word);
             if (tokenCount > 0) {
                 input[inputMapping.get(word) % tokenCount] += value;
             } else {
@@ -205,6 +200,7 @@ public class ANNWrapper implements java.io.Serializable {
             }
         }
 
+        System.out.println("预测中，匹配到词组:" + String.join(",", matchedWords));
         double[] output = bp.calc(input);
         Map<String, Double> result = new HashMap<>();
         for (Map.Entry<String, Integer> entry : outputMapping.entrySet()) {
@@ -231,6 +227,7 @@ public class ANNWrapper implements java.io.Serializable {
                 result.put(word, result.get(word) + 1);
             }
         }
+
         return calc(result);
     }
 }

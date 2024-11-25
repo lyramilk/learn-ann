@@ -9,9 +9,8 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ANN<T extends Layer> implements java.io.Serializable {
-    public final List<T> layers = new ArrayList<T>();
-    protected int inputCount;
+public class ANN implements java.io.Serializable {
+    public final List<Layer> layers = new ArrayList<Layer>();
 
     public ANN() {
     }
@@ -44,11 +43,6 @@ public class ANN<T extends Layer> implements java.io.Serializable {
         return baos.toByteArray();
     }
 
-
-    public void setInputCount(int inputCount) {
-        this.inputCount = inputCount;
-    }
-
     public double[] calc(double[] inputs) {
         Vector outputs = forward(new Vector(inputs));
         return outputs.data;
@@ -62,7 +56,7 @@ public class ANN<T extends Layer> implements java.io.Serializable {
         return inputsForNextLayer;
     }
 
-    public double loss(Vector predictions, Vector outputs) {
-        return MSE.Instance.loss(predictions, outputs);
+    public double loss(ILossFunction lossFunction,Vector predictions, Vector outputs) {
+        return lossFunction.loss(predictions, outputs);
     }
 }

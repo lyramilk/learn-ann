@@ -2,8 +2,10 @@ package com.lyramilk.ann.updatefunction;
 
 import com.lyramilk.ann.IUpdateWeightFunction;
 import com.lyramilk.ann.Neuron;
-import com.lyramilk.ann.UpdatableLayer;
+import com.lyramilk.ann.Layer;
 import com.lyramilk.ann.Vector;
+
+import java.io.ObjectInputStream;
 
 public class Adam implements IUpdateWeightFunction {
     private final static double BETA_1 = 0.9;
@@ -14,7 +16,7 @@ public class Adam implements IUpdateWeightFunction {
     }
 
     @Override
-    public void updateWeight(UpdatableLayer layer,Neuron neuron, Vector gradient, double rate,int t) {
+    public void updateWeight(Layer layer,Neuron neuron, Vector gradient, double rate,int t) {
         for (int i = 0; i < neuron.weights.length; i++) {
             double dold = neuron.momentum[i];
             double gradientData = gradient.data[i];
@@ -37,7 +39,7 @@ public class Adam implements IUpdateWeightFunction {
     }
 
     @Override
-    public void update(UpdatableLayer layer,Neuron neuron,int i, double gradient, double rate,int t)
+    public void update(Layer layer,Neuron neuron,int i, double gradient, double rate,int t)
     {
             double dold = neuron.momentum[i];
             neuron.momentum[i] = BETA_1 * neuron.momentum[i] + (1 - BETA_1) * gradient;
@@ -47,6 +49,7 @@ public class Adam implements IUpdateWeightFunction {
             double vHat = neuron.velocity[i] / (1 - Math.pow(BETA_2, t));
             neuron.weights[i] -= rate * mHat / (Math.sqrt(vHat) + EPSILON);
     }
+
 }
 
 

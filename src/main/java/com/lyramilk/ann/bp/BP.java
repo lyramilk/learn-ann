@@ -1,56 +1,64 @@
 package com.lyramilk.ann.bp;
 
 import com.lyramilk.ann.*;
+import com.lyramilk.ann.updatefunction.Adam;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class BP extends ANN<UpdatableLayer> {
-    private transient final IUpdateWeightFunction updateWeightFunction;
+public class BP extends ANN {
     private int curEpochs = 0;
 
-    public BP(IUpdateWeightFunction updateWeightFunction) {
-        this.updateWeightFunction = updateWeightFunction;
+    public BP()
+    {
     }
 
-    public void addLayer(int neuronCount, IActivationFunction activationFunction) {
+    public void addLayer(int neuronCount,IActivationFunction activationFunction) {
         if (layers.isEmpty()) {
             // 第一层，参数数量为输入参数数量
-            layers.add(new UpdatableLayer(layers.size(),neuronCount, inputCount, activationFunction, updateWeightFunction));
+            layers.add(new Layer(neuronCount,activationFunction));
         } else {
             // 其他层，参数数量为上一层神经元数量
-            layers.add(new UpdatableLayer(layers.size(),neuronCount, layers.get(layers.size() - 1).neurons.length, activationFunction, updateWeightFunction));
+            layers.add(new Layer(neuronCount,activationFunction));
         }
     }
 
-    public double train(Item item, double rate, ILossFunction lossFunction) {
+    public void init(int inputCount)
+    {
+        for(Layer layer:layers){
+            layer.init(inputCount);
+            inputCount = layer.neurons.length;
+        }
+
+    }
+
+    public double train(Item item, double rate, IUpdateWeightFunction updateWeightFunction,ILossFunction lossFunction) {
 
 
         Vector inputs = new Vector(item.inputs);
         Vector predictions = new Vector(item.predictions);
-        return train(inputs, predictions, rate, lossFunction);
+        return train(inputs, predictions, rate, updateWeightFunction,lossFunction);
     }
 
     private double leakyRelu(double x) {
         return x > 0 ? x : 0.01 * x;
     }
 
-    public double train(Vector inputs, Vector predictions, double rate, ILossFunction lossFunction) {
+    public double train(Vector inputs, Vector predictions, double rate, IUpdateWeightFunction updateWeightFunction,ILossFunction lossFunction) {
         ++curEpochs;
+
         List<Vector> outputsOfAllLayer = forwardAndCache(inputs);
         Vector outputs = outputsOfAllLayer.get(outputsOfAllLayer.size() - 1);
-        double loss = loss(predictions, outputs);
-        System.out.println("loss=" + loss + "predictions=" + predictions +  "outputs=" + outputs + "inputs=" + inputs );
+        double loss = loss(lossFunction,predictions, outputs);
+        //System.out.println("loss=" + loss + "predictions=" + predictions +  "outputs=" + outputs + "inputs=" + inputs );
         Vector errors = lossFunction.gradient(predictions, outputs);
 
         // 更新除了第一层之外的其他层
         for (int i = 1; i < layers.size(); i++) {
-            UpdatableLayer layer = layers.get(i);
-            UpdatableLayer prevLayer = layers.get(i - 1);
+            Layer layer = layers.get(i);
+            Layer prevLayer = layers.get(i - 1);
             Vector currentOutputs = outputsOfAllLayer.get(i);
             //Vector prevOutputs = outputsOfAllLayer.get(i - 1);
-
-            IActivationFunction af = layer.getActivationFunction();
 
             Vector[] gradient = new Vector[layer.neurons.length];
             for (int j = 0; j < layer.neurons.length; j++) {
@@ -86,10 +94,8 @@ public class BP extends ANN<UpdatableLayer> {
         }
 
         // 更新第一层
-        UpdatableLayer layer = layers.get(0);
+        Layer layer = layers.get(0);
         Vector currentOutputs = outputsOfAllLayer.get(0);
-
-        IActivationFunction af = layer.getActivationFunction();
 
         Vector[] gradient = new Vector[layer.neurons.length];
         for (int j = 0; j < layer.neurons.length; j++) {

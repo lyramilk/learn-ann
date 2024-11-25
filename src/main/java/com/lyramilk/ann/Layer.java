@@ -5,35 +5,34 @@ import com.lyramilk.ann.activationfunction.Identify;
 public class Layer implements java.io.Serializable {
     public String id;
     public Neuron[] neurons;
-    public int inputCount;
+    private transient IActivationFunction activationFunction;
 
-    protected transient IActivationFunction activationFunction;
-
-    public Layer(int id,int neuronCount, int inputCount, IActivationFunction activationFunction) {
+    public Layer(int neuronCount,IActivationFunction activationFunction) {
         this.id = String.valueOf(id);
         this.activationFunction = activationFunction;
-        if (this.activationFunction == null) {
-            this.activationFunction = Identify.Instance;
-        }
-
         neurons = new Neuron[neuronCount];
+    }
+
+    public boolean init(int inputCount)
+    {
         for (int i = 0; i < neurons.length; i++) {
-            neurons[i] = new Neuron(inputCount);
-            neurons[i].id = id + "_" + i;
+            Neuron neuron = new Neuron(inputCount);
+            neuron.id = id + "_" + i;
+
+            for (int j = 0; j < neuron.weights.length; j++) {
+                neuron.weights[j] = Math.random();
+            }
+            neuron.bias = Math.random();
+
+            neurons[i] = neuron;;
         }
-        this.inputCount = inputCount;
-    }
-
-    public IActivationFunction getActivationFunction() {
-        return activationFunction;
-    }
-
-    // 允许重新设置激活函数
-    public void setActivationFunction(IActivationFunction activationFunction) {
-        this.activationFunction = activationFunction;
+        return true;
     }
 
     public Vector forward(Vector inputs) {
+        if(this.activationFunction == null){
+            this.activationFunction = new Identify();
+        }
         Vector outputs = new Vector(neurons.length);
         for (int i = 0; i < neurons.length; i++) {
             Neuron neuron = neurons[i];
