@@ -50,7 +50,7 @@ public class BP extends ANN {
         Vector errors = lossFunction.gradient(predictions, outputs);
 
         // 更新除了第一层之外的其他层
-        for (int i = layers.size() - 1; i > 1; i--) {
+        for (int i = layers.size() - 1; i > 0; i--) {
             Layer layer = layers.get(i);
             Layer prevLayer = layers.get(i - 1);
             Vector currentInputs = outputsOfAllLayer.get(i - 1);

@@ -38,7 +38,7 @@ public class Main {
     public void trainPrescription(int samplesCount, int epoch, double rate) {
         System.out.println("正在训练模型...");
 
-        ann.addLayer(1000);
+
 
         List<Data> dataList = dataSet.toData(samplesCount);
 
@@ -54,7 +54,7 @@ public class Main {
             trainDataList.add(dataList.get(i));
         }
 
-
+        ann.addLayer(1000);
         ann.train(dataList, rate, epoch);
         System.out.println("模型训练完成");
     }
@@ -101,7 +101,7 @@ public class Main {
 
     BP bpmultiply = new BP();
 
-    public void trainmultiply(int samplesCount, int epoch) {
+    public void trainmultiply(int samplesCount, int epoch,double rate) {
         System.out.println("正在训练模型...");
 
         bpmultiply.addLayer(10, IActivationFunction.RELU);
@@ -133,7 +133,7 @@ public class Main {
                 Item item = new Item();
                 item.inputs = input;
                 item.predictions = output;
-                loss = bpmultiply.train(item, 0.001, IUpdateWeightFunction.ADAM, ILossFunction.MSE);
+                loss = bpmultiply.train(item, rate, IUpdateWeightFunction.ADAM, ILossFunction.MSE);
             }
             System.out.println("第" + t + "轮训练，loss=" + loss);
         }
@@ -156,17 +156,17 @@ public class Main {
     public static void main(String[] args) throws IOException {
         Main main = new Main();
 
-        /*
+/*
         main.loadDataSet();
-        main.trainPrescription(100,10000,0.001);
+        main.trainPrescription(20,100,0.001);
         main.saveModel("E:\\model.json");
         main.loadModel("E:\\model.json");
         main.predictPrescription("高血压");
-        */
+*/
 
 
-        main.trainmultiply(50, 10000);
-        main.predictmultiply(12000, 300);
+        main.trainmultiply(100, 2000,0.001);
+        main.predictmultiply(12000, 3);
 
     }
 }
