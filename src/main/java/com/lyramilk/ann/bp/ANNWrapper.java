@@ -3,8 +3,6 @@ package com.lyramilk.ann.bp;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.lyramilk.ann.*;
-import com.lyramilk.ann.lossfunction.MSE;
-import com.lyramilk.ann.updatefunction.Adam;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -54,7 +52,7 @@ public class ANNWrapper implements java.io.Serializable {
         return baos.toByteArray();
     }
 
-    public void train(List<Data> dataList, double rate,int epoch) {
+    public void train(List<Data> dataList, double rate, int epoch) {
         for (Data data : dataList) {
             for (Map.Entry<String, Double> entry : data.inputs.entrySet()) {
                 String word = entry.getKey();
@@ -103,11 +101,11 @@ public class ANNWrapper implements java.io.Serializable {
 
         System.out.println("即将提交训练共有" + inputMapping.size() + "个参数和" + outputMapping.size() + "个输出");
 
-        for(int q=0;q<epoch;++q) {
+        for (int q = 0; q < epoch; ++q) {
             for (int i = 0; i < trainData.size(); ++i) {
                 double loss = bp.train(trainData.get(i), rate, IUpdateWeightFunction.ADAM, ILossFunction.MSE);
                 System.out.println("第" + q + "轮，第" + i + "次训练，loss=" + loss);
-                if(loss < 0.001){
+                if (loss < 0.001) {
                     System.out.println("loos小于0.001，停止训练");
                     return;
                 }
@@ -166,7 +164,7 @@ public class ANNWrapper implements java.io.Serializable {
             bp.addLayer(neuronCount, IActivationFunction.RELU);
         }
         // 添加输出层
-        bp.addLayer(outputMapping.size(),IActivationFunction.IDENTIFY);
+        bp.addLayer(outputMapping.size(), IActivationFunction.IDENTIFY);
         bp.init(inputMapping.size() % tokenCount);
 
         System.out.println("即将提交训练共有" + inputMapping.size() + "个参数和" + outputMapping.size() + "个输出");

@@ -1,13 +1,8 @@
 package org.example;
 
 import com.lyramilk.ann.*;
-import com.lyramilk.ann.activationfunction.Identify;
-import com.lyramilk.ann.activationfunction.Relu;
 import com.lyramilk.ann.bp.ANNWrapper;
 import com.lyramilk.ann.bp.BP;
-import com.lyramilk.ann.lossfunction.MSE;
-import com.lyramilk.ann.updatefunction.Adam;
-import com.lyramilk.ann.updatefunction.SGD;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -16,6 +11,7 @@ import java.util.stream.Stream;
 
 public class Main {
     private DataSet dataSet;
+
     public void loadDataSet() throws IOException {
         System.out.print("正在处理数据集...");
         ClassLoader classLoader = Main.class.getClassLoader();
@@ -39,8 +35,7 @@ public class Main {
 
     ANNWrapper ann = new ANNWrapper();
 
-    public void trainPrescription(int samplesCount,int epoch,double rate)
-    {
+    public void trainPrescription(int samplesCount, int epoch, double rate) {
         System.out.println("正在训练模型...");
 
         ann.addLayer(1000);
@@ -55,12 +50,12 @@ public class Main {
         blacklist.add("个");
         blacklist.add("病例");
 
-        for(int i=0;i<samplesCount;++i){
+        for (int i = 0; i < samplesCount; ++i) {
             trainDataList.add(dataList.get(i));
         }
 
 
-        ann.train(dataList, rate,epoch);
+        ann.train(dataList, rate, epoch);
         System.out.println("模型训练完成");
     }
 
@@ -72,8 +67,7 @@ public class Main {
         System.out.println("模型已保存到" + path);
     }
 
-    public void loadModel(String path)
-    {
+    public void loadModel(String path) {
         File file = new File(path);
         try (FileInputStream fileInputStream = new FileInputStream(file)) {
             StringBuilder jsonModel = new StringBuilder();
@@ -91,14 +85,14 @@ public class Main {
     }
 
     public void predictPrescription(String input) {
-        Map<String,Double> reuslt = ann.predict(DataSet.segment(input));
+        Map<String, Double> reuslt = ann.predict(DataSet.segment(input));
 
         // 按预测值从大到小排序
         // reuslt = reuslt.entrySet().stream().sorted(Map.Entry.<String, Double>comparingByValue().reversed()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
-        Stream<Map.Entry<String,Double>> obj =  reuslt.entrySet().stream().sorted(Map.Entry.<String, Double>comparingByValue().reversed());
-        List<Map.Entry<String,Double>> output =  new ArrayList<>();
+        Stream<Map.Entry<String, Double>> obj = reuslt.entrySet().stream().sorted(Map.Entry.<String, Double>comparingByValue().reversed());
+        List<Map.Entry<String, Double>> output = new ArrayList<>();
         obj.forEach(output::add);
-        for (Map.Entry<String,Double> entry : output) {
+        for (Map.Entry<String, Double> entry : output) {
             if (entry.getValue() > 0) {
                 System.out.println(entry.getKey() + " : " + entry.getValue());
             }
@@ -106,26 +100,40 @@ public class Main {
     }
 
     BP bpmultiply = new BP();
-    public void trainmultiply(int samplesCount,int epoch)
-    {
+
+    public void trainmultiply(int samplesCount, int epoch) {
         System.out.println("正在训练模型...");
 
-        bpmultiply.addLayer(64, IActivationFunction.RELU);
-        bpmultiply.addLayer(2, IActivationFunction.RELU);
+        bpmultiply.addLayer(10, IActivationFunction.RELU);
+        bpmultiply.addLayer(10, IActivationFunction.RELU);
+        bpmultiply.addLayer(4, IActivationFunction.RELU);
         bpmultiply.init(2);
 
-        for(int t=0;t<epoch;++t){
+        List<double[]> samples = new ArrayList<>();
+        for (int i = 0; i < samplesCount; ++i) {
+            double x = (int) (Math.random() * 1000);
+            double y = (int) (Math.random() * 1000);
+            if (y < 1.0f) {
+                y = 1.0f;
+            }
+            if (x < 1.0f) {
+                x = 1.0f;
+            }
+            double[] input = {x, y};
+            samples.add(input);
+        }
+
+        for (int t = 0; t < epoch; ++t) {
             double loss = 0;
-            for(int i=0;i<samplesCount;++i){
-                int x = (int)(Math.random()*100);
-                int y = (int)(Math.random()*100);
-                double[] input = {x, y};
-                double[] output = {x * y, x + y};
+            for (double[] input : samples) {
+                double x = input[0];
+                double y = input[1];
+                double[] output = {x * y, x + y, x / y, 1000 * x + y};
 
                 Item item = new Item();
                 item.inputs = input;
                 item.predictions = output;
-                loss = bpmultiply.train(item, 0.01, IUpdateWeightFunction.ADAM,ILossFunction.MSE);
+                loss = bpmultiply.train(item, 0.001, IUpdateWeightFunction.ADAM, ILossFunction.MSE);
             }
             System.out.println("第" + t + "轮训练，loss=" + loss);
         }
@@ -133,19 +141,32 @@ public class Main {
         System.out.println("模型训练完成");
     }
 
-
-
+    public void predictmultiply(double x, double y) {
+        double[] input = {x, y};
+        double[] output = bpmultiply.calc(input);
+        System.out.print("预测结果：");
+        System.out.println("x=" + x + ",y=" + y);
+        System.out.println("x*y预测值" + output[0] + "，实际值" + x * y + "，误差比率" + (output[0] / (x * y)));
+        System.out.println("x+y预测值" + output[1] + "，实际值" + (x + y) + "，误差比率" + (output[1] / (x + y)));
+        System.out.println("x/y预测值" + output[2] + "，实际值" + (x / y) + "，误差比率" + (output[2] / (x / y)));
+        System.out.println("1000*x+y预测值" + output[3] + "，实际值" + (1000 * x + y) + "，误差比率" + (output[3] / (1000 * x + y)));
+    }
 
 
     public static void main(String[] args) throws IOException {
         Main main = new Main();
 
+        /*
         main.loadDataSet();
         main.trainPrescription(100,10000,0.001);
-
         main.saveModel("E:\\model.json");
-        //main.loadModel("E:\\model.json");
+        main.loadModel("E:\\model.json");
         main.predictPrescription("高血压");
+        */
+
+
+        main.trainmultiply(50, 10000);
+        main.predictmultiply(12000, 300);
 
     }
 }

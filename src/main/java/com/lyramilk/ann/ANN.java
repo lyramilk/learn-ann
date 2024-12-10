@@ -3,7 +3,6 @@ package com.lyramilk.ann;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.lyramilk.ann.bp.ANNWrapper;
-import com.lyramilk.ann.lossfunction.MSE;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -56,7 +55,7 @@ public class ANN implements java.io.Serializable {
         return inputsForNextLayer;
     }
 
-    public double loss(ILossFunction lossFunction,Vector predictions, Vector outputs) {
+    public double loss(ILossFunction lossFunction, Vector predictions, Vector outputs) {
         return lossFunction.loss(predictions, outputs);
     }
 }

@@ -14,9 +14,9 @@ public class DataSet {
 
     static DataSet fromJson(String json) {
         Gson gson = new Gson();
-        List<Map> parseArray = (List<Map>)gson.fromJson(json, List.class);
+        List<Map> parseArray = (List<Map>) gson.fromJson(json, List.class);
 
-        Map<String,Integer> wordFrequency = new HashMap<>();
+        Map<String, Integer> wordFrequency = new HashMap<>();
 
         DataSet dataSet = new DataSet();
         for (Map map : parseArray) {
@@ -29,17 +29,17 @@ public class DataSet {
             inputData.input = new ArrayList<>();
 
             List<String> segs = segmenter.sentenceProcess(input);
-            for(String seg : segs) {
+            for (String seg : segs) {
                 boolean isAllIdeographic = true;
-                for(int i = 0; i < seg.length(); i++) {
-                    if(!Character.isIdeographic(seg.charAt(0))){
+                for (int i = 0; i < seg.length(); i++) {
+                    if (!Character.isIdeographic(seg.charAt(0))) {
                         isAllIdeographic = false;
                     }
                 }
-                if(isAllIdeographic){
-                    if(wordFrequency.containsKey(seg)) {
+                if (isAllIdeographic) {
+                    if (wordFrequency.containsKey(seg)) {
                         wordFrequency.put(seg, wordFrequency.get(seg) + 1);
-                    }else{
+                    } else {
                         wordFrequency.put(seg, 1);
                     }
                     inputData.input.add(seg);
@@ -62,13 +62,13 @@ public class DataSet {
         int inputCount = 0;
         List<Data> dataList = new ArrayList<>();
         for (InputData inputData : data) {
-            if(inputCount++ > bound)  break;
+            if (inputCount++ > bound) break;
             Data data = new Data();
             data.inputs = new HashMap<>();
             data.predictions = new HashMap<>();
             for (String word : inputData.input) {
                 // 清洗关键词，去掉一些高频无效词
-                if(wordMask.contains(word)) continue;
+                if (wordMask.contains(word)) continue;
                 data.inputs.put(word, 1.0);
             }
             for (String word : inputData.output) {

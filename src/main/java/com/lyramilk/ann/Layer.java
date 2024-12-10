@@ -7,14 +7,13 @@ public class Layer implements java.io.Serializable {
     public Neuron[] neurons;
     private transient IActivationFunction activationFunction;
 
-    public Layer(int neuronCount,IActivationFunction activationFunction) {
+    public Layer(int neuronCount, IActivationFunction activationFunction) {
         this.id = String.valueOf(id);
         this.activationFunction = activationFunction;
         neurons = new Neuron[neuronCount];
     }
 
-    public boolean init(int inputCount)
-    {
+    public boolean init(int inputCount) {
         for (int i = 0; i < neurons.length; i++) {
             Neuron neuron = new Neuron(inputCount);
             neuron.id = id + "_" + i;
@@ -24,13 +23,13 @@ public class Layer implements java.io.Serializable {
             }
             neuron.bias = Math.random();
 
-            neurons[i] = neuron;;
+            neurons[i] = neuron;
         }
         return true;
     }
 
     public Vector forward(Vector inputs) {
-        if(this.activationFunction == null){
+        if (this.activationFunction == null) {
             this.activationFunction = new Identify();
         }
         Vector outputs = new Vector(neurons.length);

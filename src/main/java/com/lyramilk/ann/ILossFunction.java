@@ -1,4 +1,5 @@
 package com.lyramilk.ann;
+
 import com.lyramilk.ann.lossfunction.MSE;
 
 public interface ILossFunction {
